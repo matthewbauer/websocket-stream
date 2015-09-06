@@ -35,11 +35,15 @@ function WebSocketStream(target, protocols) {
   proxy.on('close', destroy)
 
   function socketWriteNode(chunk, enc, next) {
+    if (typeof chunk !== 'string')
+      chunk = JSON.stringify(chunk)
     socket.send(chunk, next)
   }
 
   function socketWriteBrowser(chunk, enc, next) {
     try {
+      if (typeof chunk !== 'string')
+        chunk = JSON.stringify(chunk)
       socket.send(chunk)
     } catch(err) {
       return next(err)
@@ -60,7 +64,7 @@ function WebSocketStream(target, protocols) {
   }
 
   function onclose() {
-    stream.end();
+    stream.end()
     stream.destroy()
   }
 
@@ -71,6 +75,7 @@ function WebSocketStream(target, protocols) {
   function onmessage(event) {
     var data = event.data
     if (data instanceof ArrayBuffer) data = new Buffer(new Uint8Array(data))
+    else if (typeof data === 'string') data = JSON.parse(data)
     else data = new Buffer(data)
     proxy.push(data)
   }
